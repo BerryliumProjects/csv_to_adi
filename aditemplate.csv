@@ -1,0 +1,8 @@
+call,mode,rst_sent,rst_rcvd,qso_date,time_on,band,freq,station_callsign,comment
+# The qso_date should be YYYYMMDD. Freq in MHz.
+# The time_on can be HHMM HHMMSS HMM or HMMSS. Must include leading zero if before 1 am.
+# If CSV format do not include any commas in the optional comment field
+# Fields can be double-quoted but this is optional
+# Example: G1ABC,CW,579,589,20251231,2130,40m,7.123,G2XYZ,your comment here 
+
+

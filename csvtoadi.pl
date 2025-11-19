@@ -5,7 +5,7 @@ use warnings;
 my ($infile, $outfile) = @ARGV;
 
 unless ($outfile) {
-   ($infile =~ /\.csv$|\.txt/) or die "Input file should be .csv or .txt\n"; 
+   ($infile =~ /\.(csv|txt)$/) or die "Input file should be .csv or .txt\n";
    $outfile = $infile;
    $outfile =~ s/\..*?$/.adi/;
    printf "Output file: %s\n", $outfile;
@@ -33,14 +33,27 @@ my $fieldcnt = scalar(@fieldnames);
 my $recordcnt = 0;
 while (my $record = <IN>) {
    chomp $record; # remove newline and trim
-   last if length($record) == 0;
+   next if length($record) == 0;
+   next if $record =~ /^#/; # comment line
    $recordcnt++;
    my @fields = split /[,\t]/, $record;
 
    for (my $fieldix = 0; $fieldix < $fieldcnt; $fieldix++) {
-      my $field = $fields[$fieldix]; 
+      my $field = $fields[$fieldix];
+      next unless length($field); # catches null and 0
+      # remove any leading and trailing quotes
+      $field =~ s/^"//;
+      $field =~ s/"$//;
+      my $fieldname = $fieldnames[$fieldix];
+
+      if ($field =~ /\d+/ and $fieldname =~ /^time_/) {
+         # time fields should be hhmmss or hhmm
+         if (length($field) % 2) {
+            $field = '0' . $field; # pre 10am
+         }
+      }
+
       my $fieldlen = length($field);
-      next unless $fieldlen; # catches null and 0
       printf OUT "<%s:%i>%s ", $fieldnames[$fieldix], $fieldlen, $field;
    }
 
@@ -52,5 +65,5 @@ close OUT;
 printf "%i records written to %s\n", $recordcnt, $outfile;
 
 # example record output:
-#<call:5>K5TIA <gridsquare:0> <mode:4>MFSK <submode:3>FT4 <rst_sent:2>1D <rst_rcvd:2>1D <qso_date:8>20220625 <time_on:6>210124 <qso_date_off:8>20220625 <time_off:6>210124 <band:3>20m <freq:9>14.081946 <station_callsign:5>W9MDB <my_gridsquare:6>EM49HV <contest_id:14>ARRL-FIELD-DAY <SRX_STRING:6>1D STX <class:2>1D <arrl_sect:3>STX <eor>
+#<call:5>K5TIA <gridsquare:0> <mode:4>MFSK <submode:3>FT4 <rst_sent:2>1D <rst_rcvd:2>1D <qso_date:8>20220625 <time_on:6>210124 <qso_date_off:8>20220625 <time_off:6>210124 <band:3>20m <freq:9>14.081946 <station_callsign:5>W9MDB <my_gridsquare:6>EM49HV <contest_id:14>ARRL-FIELD-DAY <SRX_STRING:6>1D STX <class:2>1D <arrl_sect:3>STX <comment:10>Club Nr 12 <eor>
 
